@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House of Puzzles — Британски Пъзели</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8f9fa; color: #333; }
+        
+        header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; text-align: center; padding: 40px 20px; }
+        header h1 { font-size: 2.2rem; margin-bottom: 10px; }
+        .badge { background: #ff4757; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: inline-block; margin-top: 10px; }
+        
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+        
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card-img { width: 100%; height: 210px; object-fit: cover; background: #eaeaea; }
+        
+        .card-body { padding: 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-code { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; }
+        .card-title { font-size: 1.05rem; margin: 8px 0 15px 0; color: #2c3e50; min-height: 48px; }
+        
+        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; pt-10; border-top: 1px solid #eee; }
+        .price { font-size: 1.3rem; font-weight: 700; color: #27ae60; }
+        
+        .btn-buy { background-color: #ff6b6b; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-buy:hover { background-color: #ee5253; }
+        
+        /* Modal Form */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .btn-submit { width: 100%; background: #27ae60; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>House of Puzzles — Оригинални Пъзели</h1>
+    <p>Уникално британско качество с нестандартни части за уютни празнични вечери</p>
+    <div class="badge">🔥 Бърза доставка с наложен платеж</div>
+</header>
+
+<div class="container">
+    <div class="grid" id="productsGrid">
+        <!-- Продуктите се зареждат динамично от puzzles.json -->
+    </div>
+</div>
+
+<div class="modal" id="orderModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeOrderModal()">&times;</span>
+        <h2 style="color: #1e3c72; margin-bottom: 15px;">Бърза Поръчка</h2>
+        
+        <form action="https://api.web3forms.com/submit" method="POST">
+            <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_KEY">
+            
+            <div class="form-group">
+                <label>Избран продукт:</label>
+                <input type="text" id="modalProductTitle" name="Product" readonly style="background: #f1f1f1; font-weight: bold;">
+            </div>
+            <div class="form-group">
+                <label>Име и Фамилия:</label>
+                <input type="text" name="Name" placeholder="Вашето име" required>
+            </div>
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="tel" name="Phone" placeholder="0888123456" required>
+            </div>
+            <div class="form-group">
+                <label>Град и адрес / офис на Еконт или Спиди:</label>
+                <textarea name="Address" rows="3" placeholder="гр. София, офис на Еконт..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Потвърди поръчката</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Зареждане на фийда с продукти
+    fetch('puzzles.json')
+        .then(response => response.json())
+        .then(products => {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="card">
+                    <img src="${p.image}" alt="${p.title}" class="card-img" onerror="this.src='https://via.placeholder.com/300x210?text=${p.code}'">
+                    <div class="card-body">
+                        <div>
+                            <span class="card-code">Код: ${p.code}</span>
+                            <h3 class="card-title">${p.title}</h3>
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">${p.price.toFixed(2)} €</span>
+                            <button class="btn-buy" onclick="openOrderModal('${p.title} (${p.code})', '${p.price.toFixed(2)} €')">Поръчай</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(err => console.error('Грешка при зареждане на фийда:', err));
+
+    function openOrderModal(title, price) {
+        document.getElementById('modalProductTitle').value = `${title} - ${price}`;
+        document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function closeOrderModal() {
+        document.getElementById('orderModal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
